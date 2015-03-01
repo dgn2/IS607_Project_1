@@ -1,5 +1,22 @@
-﻿
+﻿--Purpose: 
+--The following database has been created to support the work of British Columbia Institute of Technology in 
+--determining the value of the education they are providing. The BCIT has been studying the use of student aid 
+--default rates as a proxy for the value of education provided by BCIT and competing educational institutions. 
+--The idea is that the best quality education is associated with low default rates. The geo-spatial data allows 
+--the staff at BCIT to explore the impact of geography on default rates. The default rate data can be used to 
+--guage the effectiveness of using low default rates to validate employment survey results.
+
+--NULL values are included in the results of the table join where default rates were not available.
+ 
+--All of the data was obtained from the following two public sources:
+--(1) DataBC (Government of British Columbia) https://apps.gov.bc.ca
+--(2) British Columbia Student Aid: https://studentaidbc.ca/apply/designated
+--Source (1) was used for all of the details on educational institutions, including the geo-spatial data; 
+--(2) provided the student aid default rates.
+
+
 --Drop the tables
+DROP TABLE IF EXISTS relationships;
 DROP TABLE IF EXISTS student_aid_bc;
 DROP TABLE IF EXISTS degree_granting_type;
 DROP TABLE IF EXISTS region;
@@ -7,7 +24,7 @@ DROP TABLE IF EXISTS institution;
 DROP TABLE IF EXISTS city;
 DROP TABLE IF EXISTS institution_type;
 DROP TABLE IF EXISTS campus;
-DROP TABLE IF EXISTS relationships;
+
 
 --Create the degree_granting_type table
 CREATE TABLE degree_granting_type
@@ -684,7 +701,7 @@ INSERT INTO student_aid_bc (institution_id,FY_200708_201112,FY_200607_201011,FY_
 INSERT INTO student_aid_bc (institution_id,FY_200708_201112,FY_200607_201011,FY_200506_200910,FY_200405_200809) VALUES(44,0.125,0.133,0.143,0.163);
 
 
---table JOIN
+--table JOIN: denormalize the tables and add the default rates
 SELECT c.campus,c.address,i_t.type,rg.region,cy.city,c.latitude,c.longitude,d_g_t.degree_granting_type,i.institution,i.institution_website,FY_200708_201112,FY_200607_201011,FY_200506_200910,FY_200405_200809 FROM relationships r
 INNER JOIN (SELECT * FROM city) cy ON r.city_id = cy.city_id
 INNER JOIN (SELECT * FROM institution) i ON r.institution_id = i.institution_id
@@ -693,3 +710,4 @@ INNER JOIN (SELECT * FROM campus) c ON r.campus_id = c.campus_id
 INNER JOIN (SELECT * FROM institution_type) i_t ON r.type_id = i_t.type_id
 INNER JOIN (SELECT * FROM degree_granting_type) d_g_t ON r.degree_granting_type_id = d_g_t.degree_granting_type_id
 INNER JOIN (SELECT * FROM student_aid_bc) aid ON i.institution_id = aid.institution_id
+ORDER BY i.institution,c.campus;
